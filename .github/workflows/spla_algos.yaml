@@ -1,0 +1,72 @@
+name: Build and Test SPLA and pyspla
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.11.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Configure CMake
+        working-directory: spla_algos/
+        run: cmake .
+
+      - name: Build SPLA
+        working-directory: spla_algos/
+        run: make
+
+      - name: Install pyspla
+        working-directory: spla_algos/
+        run: |
+          pip install _deps/spla-src/python
+          cp _deps/spla-build/libspla_x64.so /opt/hostedtoolcache/Python/3.11.12/x64/lib/python3.11/site-packages/pyspla/libspla_x64.so
+
+      - name: Install deps
+        working-directory: spla_algos/
+        run: pip install -r requirements.txt
+
+      - name: Run extractor of biggest cc
+        working-directory: spla_algos/src
+        run: |
+          python bfsp_extract_biggest_cc.py --dataset_path ../../experiment_graphs/bfsp/graphs/ --selected_graphs facebook_combined
+
+      - name: Run BFS-parents feature extractor
+        working-directory: spla_algos/src
+        run: |
+          python bfsp_feature_extractor.py --dataset_path ../../experiment_graphs/bfsp/biggest_cc/ --chunk_size 30  --selected_graphs facebook_combined
+
+      - name: Run BFS-parents experiment
+        working-directory: spla_algos/src
+        run: |
+          python bfsp_experiment.py --dataset_path ../../experiment_graphs/bfsp/biggest_cc/ --count_vertices 3 30 --n_repeats 3 --selected_graphs facebook_combined
+
+      - name: Run tests
+        working-directory: spla_algos/src
+        run: |
+          pytest
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: |
+            spla_algos/**/*.log
+            experiment_graphs/bfsp/biggest_cc/*
+            experiment_graphs/bfsp/bfsp_reachable_count/*
