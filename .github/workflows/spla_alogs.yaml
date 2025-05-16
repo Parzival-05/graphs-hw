@@ -1,0 +1,52 @@
+name: Build and Test SPLA and pyspla
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.11.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Configure CMake
+        working-directory: spla_algos/
+        run: cmake .
+
+      - name: Build SPLA
+        working-directory: spla_algos/
+        run: make
+
+      - name: Install pyspla
+        working-directory: spla_algos/
+        run: |
+          pip install _deps/spla-src/python
+          cp _deps/spla-build/libspla_x64.so /opt/hostedtoolcache/Python/3.11.12/x64/lib/python3.11/site-packages/pyspla/libspla_x64.so
+
+      - name: Install deps
+        working-directory: spla_algos/
+        run: pip install -r requirements.txt
+
+      - name: Run BFS-parents experiment
+        working-directory: spla_algos/src
+        run: |
+          python experiment_bfs.py
+
+      - name: Run tests
+        working-directory: spla_algos/src
+        run: |
+          python tests.py
