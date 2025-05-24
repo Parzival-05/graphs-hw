@@ -3,6 +3,7 @@ from pyspla import INT, Matrix, Vector
 from common.spla_utils import copy_matrix, copy_vector
 
 MAX_INT = 2**31 - 1
+ZERO_V = MAX_INT
 
 
 def bfs_parents(s: list[int], A: Matrix):
@@ -11,7 +12,6 @@ def bfs_parents(s: list[int], A: Matrix):
             f"Incorrect input. A must be a square matrix, but got {A.n_rows}x{A.n_cols}."
         )
     INIT_VERTEX_ANSWER = 0
-    zero_v = MAX_INT
 
     n = A.n_rows
     n_indices = [i for i in range(n)]
@@ -23,7 +23,7 @@ def bfs_parents(s: list[int], A: Matrix):
         [x + 1 for x in s],
         shape=(len(s), n),
         dtype=INT,
-        zero_v=zero_v,
+        zero_v=ZERO_V,
     )
     p: Matrix = Matrix.from_lists(
         s_indices,

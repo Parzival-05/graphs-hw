@@ -4,11 +4,12 @@ import os
 import networkx
 from pydantic_core import ArgsKwargs
 
-from bfs_parents.experiment_details import (
-    bfsp_extracted_biggest_cc_path,
-)
+
 from common.dataset_utils import DatasetConfig, Parseable, parse_graph_networkx
-from common.experiment_utils import get_files_in_directory
+from common.experiment_utils import (
+    bfsp_extracted_biggest_cc_path,
+    get_files_in_directory,
+)
 
 
 class ExtractBiggectCCConfig(Parseable):

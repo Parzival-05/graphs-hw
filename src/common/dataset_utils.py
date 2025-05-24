@@ -9,9 +9,9 @@ from pathlib import Path
 import networkx
 from pydantic import BaseModel, field_validator
 from pydantic_core import ArgsKwargs
-from pyspla import Matrix
 
-from bfs_parents.experiment_details import BFSP_EXPERIMENT_DATASET_PATH
+from common.algo_type import Algo
+from common.experiment_utils import BFSP_EXPERIMENT_DATASET_PATH
 
 
 @dataclass
@@ -79,18 +79,18 @@ class DatasetConfig(Parseable):
         return [dataset_path_parse_config]
 
 
-def parse_graph(path):
+def parse_graph(path, algo: Algo):
     I = []  # noqa: E741
     J = []
     edges = 0
-    nodes = 0
+    vertices = 0
 
     def parse_row(a):
-        nonlocal edges, nodes
+        nonlocal edges, vertices
         v_from, v_to = a
         v_from, v_to = int(v_from), int(v_to)
-        nodes = max(nodes, v_from)
-        nodes = max(nodes, v_to)
+        vertices = max(vertices, v_from)
+        vertices = max(vertices, v_to)
         I.append(v_from)
         J.append(v_to)
         edges += 1
@@ -110,9 +110,24 @@ def parse_graph(path):
     else:
         raise RuntimeError(f"Failed to parse graph from {path}")
     V = [1] * edges
-    return Matrix.from_lists(I, J, V, (edges, edges)), GraphStats(
-        vertices=nodes + 1, edges=edges
-    )
+    vertices += 1
+    graph_stats = GraphStats(vertices=vertices, edges=edges)
+    M = I, J, V
+    if algo == Algo.SPLA:
+        from pyspla import Matrix
+
+        return Matrix.from_lists(*M, (vertices, vertices)), graph_stats
+    else:
+        import graphblas as gb
+
+        gb.init("suitesparse", blocking=True)
+
+        from graphblas.core.matrix import Matrix
+        from graphblas.core.dtypes import INT32
+
+        return Matrix.from_coo(
+            *M, dtype=INT32, nrows=vertices, ncols=vertices
+        ), graph_stats  # type: ignore
 
 
 CSV_FORMAT_DELIMS = [",", " "]
