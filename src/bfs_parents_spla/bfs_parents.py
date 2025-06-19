@@ -22,7 +22,7 @@ def bfs_parents(s: list[int], A: Matrix):
         s,
         [x + 1 for x in s],
         shape=(len(s), n),
-        format=FormatMatrix.ACC_CSR,
+        format=FormatMatrix.ACC_COO,
         dtype=INT,
         zero_v=ZERO_V,
     )
@@ -31,12 +31,12 @@ def bfs_parents(s: list[int], A: Matrix):
         s,
         [INIT_VERTEX_ANSWER] * len(s),
         shape=front.shape,
-        format=FormatMatrix.ACC_CSR,
+        format=FormatMatrix.ACC_COO,
         dtype=front.dtype,
         zero_v=front._zero_V,
     )
     p_masked = Matrix(
-        format=FormatMatrix.ACC_CSR,
+        format=FormatMatrix.ACC_COO,
         shape=p.shape,
         dtype=p.dtype,
         zero_v=p._zero_V,
@@ -46,7 +46,7 @@ def bfs_parents(s: list[int], A: Matrix):
         [n_indices[i % n] for i in range(len(s) * n)],
         [n_indices[i % n] + 1 for i in range(len(s) * n)],
         shape=p.shape,
-        format=FormatMatrix.ACC_CSR,
+        format=FormatMatrix.ACC_COO,
         dtype=p.dtype,
         zero_v=p._zero_V,
     )
@@ -65,7 +65,7 @@ def bfs_parents(s: list[int], A: Matrix):
         return diff.reduce(op_reduce=INT.PLUS).get()
 
     buffer = Matrix(
-        format=FormatMatrix.ACC_CSR,
+        format=FormatMatrix.ACC_COO,
         shape=p.shape,
         dtype=p.dtype,
         zero_v=p._zero_V,
