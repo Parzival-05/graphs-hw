@@ -1,4 +1,4 @@
-from pyspla import INT, Matrix, Vector
+from pyspla import INT, FormatMatrix, FormatVector, Matrix, Vector
 
 from common.spla_utils import copy_matrix, copy_vector
 
@@ -22,6 +22,7 @@ def bfs_parents(s: list[int], A: Matrix):
         s,
         [x + 1 for x in s],
         shape=(len(s), n),
+        format=FormatMatrix.ACC_CSR,
         dtype=INT,
         zero_v=ZERO_V,
     )
@@ -30,21 +31,28 @@ def bfs_parents(s: list[int], A: Matrix):
         s,
         [INIT_VERTEX_ANSWER] * len(s),
         shape=front.shape,
+        format=FormatMatrix.ACC_CSR,
         dtype=front.dtype,
         zero_v=front._zero_V,
     )
-    p_masked = Matrix(shape=p.shape, dtype=p.dtype, zero_v=p._zero_V)
+    p_masked = Matrix(
+        format=FormatMatrix.ACC_CSR,
+        shape=p.shape,
+        dtype=p.dtype,
+        zero_v=p._zero_V,
+    )
     indices_matrix = Matrix.from_lists(
         [n_indices[i // n] for i in range(len(s) * n)],
         [n_indices[i % n] for i in range(len(s) * n)],
         [n_indices[i % n] + 1 for i in range(len(s) * n)],
         shape=p.shape,
+        format=FormatMatrix.ACC_CSR,
         dtype=p.dtype,
         zero_v=p._zero_V,
     )
-    prev_found = Vector(shape=len(s), dtype=INT)
-    cur_found = Vector(shape=len(s), dtype=INT)
-    diff = Vector(shape=len(s), dtype=INT)
+    prev_found = Vector(shape=len(s), format=FormatVector.ACC_COO, dtype=INT)  # noqa: F821
+    cur_found = Vector(shape=len(s), format=FormatVector.ACC_COO, dtype=INT)
+    diff = Vector(shape=len(s), format=FormatVector.ACC_COO, dtype=INT)
     found_count = 1
 
     def calc_found(out: Vector):
@@ -56,7 +64,12 @@ def bfs_parents(s: list[int], A: Matrix):
     def calc_found_count():
         return diff.reduce(op_reduce=INT.PLUS).get()
 
-    buffer = Matrix(shape=p.shape, dtype=p.dtype, zero_v=p._zero_V)
+    buffer = Matrix(
+        format=FormatMatrix.ACC_CSR,
+        shape=p.shape,
+        dtype=p.dtype,
+        zero_v=p._zero_V,
+    )
     while found_count > 0:
         p_masked = copy_matrix(p)
         front.mxm(
