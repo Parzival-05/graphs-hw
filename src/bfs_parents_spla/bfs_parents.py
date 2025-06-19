@@ -1,4 +1,6 @@
+import ctypes
 from pyspla import INT, FormatMatrix, FormatVector, Matrix, Vector
+from pyspla.bridge import backend, check
 
 from common.spla_utils import copy_matrix, copy_vector
 
@@ -12,6 +14,7 @@ def bfs_parents(s: list[int], A: Matrix):
             f"Incorrect input. A must be a square matrix, but got {A.n_rows}x{A.n_cols}."
         )
     INIT_VERTEX_ANSWER = 0
+    check(backend().spla_Library_set_accelerator(ctypes.c_uint32(1)))
 
     n = A.n_rows
     n_indices = [i for i in range(n)]
