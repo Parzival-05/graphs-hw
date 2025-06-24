@@ -6,7 +6,7 @@ from common.spla_utils import copy_matrix, copy_vector
 
 MAX_INT = 2**31 - 1
 ZERO_V = MAX_INT
-
+OPENCL_ACC = False # set True in case of using OpenCL acceleration
 
 def bfs_parents(s: list[int], A: Matrix):
     if A.n_cols != A.n_rows:
@@ -14,7 +14,7 @@ def bfs_parents(s: list[int], A: Matrix):
             f"Incorrect input. A must be a square matrix, but got {A.n_rows}x{A.n_cols}."
         )
     INIT_VERTEX_ANSWER = 0
-    check(backend().spla_Library_set_accelerator(ctypes.c_uint32(1)))
+    check(backend().spla_Library_set_accelerator(ctypes.c_uint32(OPENCL_ACC)))
 
     n = A.n_rows
     n_indices = [i for i in range(n)]
@@ -25,7 +25,7 @@ def bfs_parents(s: list[int], A: Matrix):
         s,
         [x + 1 for x in s],
         shape=(len(s), n),
-        format=FormatMatrix.ACC_COO,
+        format=FormatMatrix.ACC_CSR,
         dtype=INT,
         zero_v=ZERO_V,
     )
@@ -34,12 +34,12 @@ def bfs_parents(s: list[int], A: Matrix):
         s,
         [INIT_VERTEX_ANSWER] * len(s),
         shape=front.shape,
-        format=FormatMatrix.ACC_COO,
+        format=FormatMatrix.ACC_CSR,
         dtype=front.dtype,
         zero_v=front._zero_V,
     )
     p_masked = Matrix(
-        format=FormatMatrix.ACC_COO,
+        format=FormatMatrix.ACC_CSR,
         shape=p.shape,
         dtype=p.dtype,
         zero_v=p._zero_V,
@@ -68,7 +68,7 @@ def bfs_parents(s: list[int], A: Matrix):
         return diff.reduce(op_reduce=INT.PLUS).get()
 
     buffer = Matrix(
-        format=FormatMatrix.ACC_COO,
+        format=FormatMatrix.ACC_CSR,
         shape=p.shape,
         dtype=p.dtype,
         zero_v=p._zero_V,
