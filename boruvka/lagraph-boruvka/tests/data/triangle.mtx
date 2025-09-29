@@ -1,0 +1,7 @@
+%%MatrixMarket matrix coordinate integer general
+% Simple triangle graph with specific weights
+% Expected MSF: edges (1,2) weight 5 and (2,3) weight 15, total weight 20
+% Should result in 2 components: {1,2} and {3}
+3 3 2
+1 2 5
+2 3 15

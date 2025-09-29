@@ -1,0 +1,114 @@
+name: CI - LAGraph Boruvka and Giraph Boruvka
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+  workflow_dispatch:
+
+jobs:
+  lagraph-boruvka:
+    runs-on: ubuntu-latest
+    name: LAGraph Boruvka (C)
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake pkg-config
+        sudo apt-get install -y libsuitesparse-dev liblapack-dev libblas-dev
+
+    - name: Cache GraphBLAS and LAGraph
+      id: cache-graphblas
+      uses: actions/cache@v4
+      with:
+        path: |
+          /usr/local/lib/libgraphblas*
+          /usr/local/lib/liblagraph*
+          /usr/local/include/GraphBLAS
+          /usr/local/include/LAGraph
+        key: graphblas-lagraph-${{ runner.os }}-v2
+        
+    - name: Install GraphBLAS and LAGraph
+      if: steps.cache-graphblas.outputs.cache-hit != 'true'
+      run: |
+        # Install GraphBLAS from source
+        cd /tmp
+        git clone --depth 1 https://github.com/DrTimothyAldenDavis/GraphBLAS.git
+        cd GraphBLAS
+        make library JOBS=2
+        sudo make install
+        
+        # Install LAGraph from source  
+        cd /tmp
+        git clone --depth 1 https://github.com/GraphBLAS/LAGraph.git
+        cd LAGraph
+        make library JOBS=2
+        sudo make install
+        
+    - name: Update library cache
+      run: sudo ldconfig
+        
+    - name: Build benchmark applications
+      run: |
+        cd boruvka/lagraph-boruvka
+        make all
+        make tests/msf_test
+        
+    - name: Run tests
+      run: |
+        cd boruvka/lagraph-boruvka
+        make test
+        
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: lagraph-test-results
+        path: boruvka/lagraph-boruvka/tests/results/
+
+  giraph-boruvka:
+    runs-on: ubuntu-latest
+    name: Giraph Boruvka (Java)
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 8
+      uses: actions/setup-java@v4
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Build with Maven
+      run: |
+        cd boruvka/giraph-boruvka
+        mvn clean compile
+        
+    - name: Run tests
+      run: |
+        cd boruvka/giraph-boruvka
+        mvn test
+        
+    - name: Package
+      run: |
+        cd boruvka/giraph-boruvka
+        mvn package
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: giraph-boruvka-jar
+        path: boruvka/giraph-boruvka/target/*.jar

@@ -1,0 +1,6 @@
+test_name,input_file,expected_components,expected_msf_edges,expected_weight_range
+triangle,triangle.mtx,1,2,20
+path4,path4.mtx,1,3,30
+complete4,complete4.mtx,1,3,6-7
+disconnected,disconnected.mtx,3,3,6
+single_node,single_node.mtx,1,0,0

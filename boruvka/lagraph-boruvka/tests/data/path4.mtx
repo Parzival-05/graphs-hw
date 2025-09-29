@@ -1,0 +1,11 @@
+%%MatrixMarket matrix coordinate integer general
+% Simple path graph: 1-2-3-4 with weights 10, 5, 15
+% Expected MSF: all three edges (connected graph), total weight 30
+% Should result in 1 component: {1,2,3,4}
+4 4 6
+1 2 10
+2 1 10
+2 3 5
+3 2 5
+3 4 15
+4 3 15
