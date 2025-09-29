@@ -1,0 +1,13 @@
+This is the description of what the code block changes:
+<changeDescription>
+Ensure no trailing empty lines
+
+</changeDescription>
+
+This is the code block that represents the suggested code change:
+```text
+1
+```
+<userPrompt>
+Provide the fully rewritten file, incorporating the suggested code change. You must produce the complete file.
+</userPrompt>

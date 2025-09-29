@@ -1,0 +1,4 @@
+%%MatrixMarket matrix coordinate integer general
+% Single node graph
+% Expected MSF: 0 edges, 1 component
+1 1 0
